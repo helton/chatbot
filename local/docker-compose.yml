@@ -1,0 +1,39 @@
+version: '3'
+services:
+  ollama:
+    image: ollama/ollama
+    ports:
+      - 11434:11434
+    volumes:
+      - ${USERPROFILE}/.docker/custom-volumes/ollama:/root/.ollama
+    networks:
+      - ollama
+  ollama-setup:
+    image: curlimages/curl:latest
+    command: ["sh", "-c", "curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"mistral\"}' && curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llama2\"}'"]
+    depends_on:
+      - ollama
+    networks:
+      - ollama
+  redis:
+    image: redislabs/redismod
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - redis
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - '8001:8001'
+    volumes:
+      - ./data/redisinsight:/db
+    networks:
+      - redis
+
+networks:
+  ollama:
+    driver: bridge
+  redis:
+    driver: bridge
